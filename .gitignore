@@ -1,0 +1,19 @@
+# Ignorowanie plików tymczasowych i logów
+*.log
+*.tmp
+
+# Ignorowanie katalogu wirtualnego środowiska Python
+venv/
+
+# Ignorowanie plików kompilacji Python
+__pycache__/
+*.pyc
+*.pyo
+
+#Ignorowanie dużych plików (modeli)
+*.pkl
+
+#Ignorowanie danych uczących
+*.png
+*.jpg
+*.npy
