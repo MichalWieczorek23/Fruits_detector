@@ -61,7 +61,7 @@ def generate_roi_from_images_dataset(images_dir, roi_dir):
             ground_truth_boxes = [list(map(int, bbox)) for bbox in ann]
 
             # Every row of ann data structure has following format [x, y, w, h, category_number], so if we take
-            # first row and its last element it will give us the number of category
+            # first row and its last element it will give us the category number
             if i == ann[0][4]-1:
                 # Read the image
                 img = Image.open(images_dir / str(image_info['file_name']))
@@ -146,8 +146,8 @@ def images_with_object_and_background_counter(folder_path, which_class = 1):
 
 
 parent_path = Path(__file__).resolve().parent.parent.parent
-images_dir = parent_path / "data" / "images" / "test"
-roi_dir = parent_path / "data" / "roi_data" / "test"
-generate_roi_from_images_dataset(images_dir, roi_dir)
+images_dir = parent_path / "data" / "images" / "train"
+roi_dir = parent_path / "data" / "roi_data" / "train"
+# generate_roi_from_images_dataset(images_dir, roi_dir)
 
-images_with_object_and_background_counter(roi_dir / "Apple")
+images_with_object_and_background_counter(roi_dir / "Orange", which_class=4)

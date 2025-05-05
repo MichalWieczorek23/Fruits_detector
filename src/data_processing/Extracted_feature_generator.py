@@ -39,8 +39,8 @@ def extracted_feature_generator(path_to_base_dataset : Path):
     # print(l_files)
     # Iteration through all files
     for i, fname in enumerate(l_files):
-        if i == 10000:
-            break
+        # if i == 10000:
+        #     break
         print(i, fname)
 
         img = Image.open(str(fname))
@@ -50,10 +50,11 @@ def extracted_feature_generator(path_to_base_dataset : Path):
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        resized_img = numpy.resize(img, (224, 224, 3))
+        resized_img = cv2.resize(img, (224, 224))
         input_arr = np.expand_dims(img_to_array(resized_img), axis=0)
 
         features = feature_extractor.predict(input_arr)     # Output features have (1,7,7,1280) shape
+        features = features.astype(np.float16, casting='same_kind')     # Precision reduction to save memory
 
         #### For test purposes
         # print(path.name)
@@ -61,15 +62,15 @@ def extracted_feature_generator(path_to_base_dataset : Path):
         # print(path.parent.name)
         # print(path.parent.parent.parent.parent)
 
-        file_name = fname.name[3:]      # Cut out the "img" prefix
-        file_name = file_name.rsplit(".", 1)[0]     # Cut out the image format like ".jpg" for example
-        new_fname = "fvec" + file_name + ".npy"     # Build new name with "fvec" prefix
+        file_name = fname.name[3:]                                  # Cut out the "img" prefix
+        file_name = file_name.rsplit(".", 1)[0]       # Cut out the image format like ".jpg" for example
+        new_fname = "fvec" + file_name + ".npz"                     # Build new name with "fvec" prefix
         temp_path_to_write = path_to_new_folder / new_fname
         # print(str(temp_path_to_write))
-        np.save(str(temp_path_to_write), features)
+        np.savez_compressed(str(temp_path_to_write), features=features)     # savez instead of save to use less memory
 
     print(f"{len(l_files)} features data were generated")
 
 parent_path = Path(__file__).resolve().parent.parent.parent
 roi_dir = parent_path / "data" / "roi_data" / "train"
-extracted_feature_generator(roi_dir / "Apple")
+extracted_feature_generator(roi_dir / "Orange")
