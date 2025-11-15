@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import cv2
 import re
+import shutil
 
 # Arguments box1, box2 passed in the following format: [x1, y1, x2, y2]
 def calculate_iou(box1, box2):
@@ -135,19 +136,67 @@ def images_with_object_and_background_counter(folder_path, which_class = 1):
     count_class = 0
     count_bkgnd = 0
 
-    for file_name in os.listdir(folder_path):
-        if pattern_class.match(file_name):
-            count_class += 1
-        elif pattern_bkgnd.match(file_name):
-            count_bkgnd += 1
+    for subfolder in folder_path.iterdir():
+        if not subfolder.is_dir():
+            continue
 
+        for file_name in os.listdir(subfolder):
+            if pattern_class.match(file_name):
+                count_class += 1
+            elif pattern_bkgnd.match(file_name):
+                count_bkgnd += 1
+
+    print(f"Statistics for folder {folder_path.parent.name}/{folder_path.name}")
     print(f"Number of files matching the class pattern: {count_class}")
     print(f"Number of files matching the background pattern: {count_bkgnd}")
+
+def split_samples_to_cls_and_bkgnd_folder(folder_path, which_class = 1):
+    if not folder_path.exists():
+        print("Folder doesn't exist.", file=sys.stderr)
+        exit(1)
+
+    pattern_class = re.compile(rf"img\d+_\d+_x\d+_y\d+_\d+_\d+_{which_class}\.jpg")
+    pattern_bkgnd = re.compile(r"img\d+_\d+_x\d+_y\d+_\d+_\d+_0\.jpg")
+
+    dest_bkgnd = folder_path / "0"
+    dest_class_dir = folder_path / str(which_class)
+
+    dest_bkgnd.mkdir(exist_ok=True)
+    dest_class_dir.mkdir(exist_ok=True)
+
+    moved_class = 0
+    moved_bkgnd = 0
+    skipped = 0
+
+    for file_name in os.listdir(folder_path):
+        src = folder_path / file_name
+        if not src.is_file():
+            continue
+
+        if pattern_class.match(file_name):
+            dst = dest_class_dir / file_name
+            # If the file already exists in the destination, we do not overwrite it.
+            if dst.exists():
+                skipped += 1
+                continue
+            shutil.move(str(src), str(dst))
+            moved_class += 1
+            print(str(dst.name), "was moved.")
+
+        elif pattern_bkgnd.match(file_name):
+            dst = dest_bkgnd / file_name
+            if dst.exists():
+                skipped += 1
+                continue
+            shutil.move(str(src), str(dst))
+            moved_bkgnd += 1
+            print(str(dst.name), "was moved.")
 
 
 parent_path = Path(__file__).resolve().parent.parent.parent
 images_dir = parent_path / "data" / "images" / "train"
 roi_dir = parent_path / "data" / "roi_data" / "train"
-# generate_roi_from_images_dataset(images_dir, roi_dir)
 
+# generate_roi_from_images_dataset(images_dir, roi_dir)
 images_with_object_and_background_counter(roi_dir / "Orange", which_class=4)
+# split_samples_to_cls_and_bkgnd_folder(roi_dir / "Banana", which_class=2)
